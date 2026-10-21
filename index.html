@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Event Handling & Intent Studio - Interactive Mobile Lab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        android: {
+                            green: '#3DDC84',
+                            darkGreen: '#073042',
+                            navy: '#08131e',
+                            card: '#0f1f2e',
+                            border: '#1e384d',
+                            accent: '#00e5ff',
+                            purple: '#a78bfa',
+                            amber: '#fbbf24',
+                            rose: '#f43f5e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #08131e;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e384d;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #3DDC84;
+        }
+        /* Grid Overlay */
+        .grid-pattern {
+            background-size: 24px 24px;
+            background-image: 
+                linear-gradient(to right, rgba(61, 220, 132, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(61, 220, 132, 0.05) 1px, transparent 1px);
+        }
+        /* Flying Packet Keyframe */
+        @keyframes flyDataPacket {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            50% { transform: translate(120px, -60px) scale(1.4); opacity: 0.9; }
+            100% { transform: translate(250px, 0) scale(1); opacity: 0; }
+        }
+        .animate-data-fly {
+            animation: flyDataPacket 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        /* Screen Transition Animations */
+        .slide-left-enter {
+            animation: slideLeft 0.4s ease-out forwards;
+        }
+        @keyframes slideLeft {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-zoom-enter {
+            animation: fadeZoom 0.4s ease-out forwards;
+        }
+        @keyframes fadeZoom {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-android-navy text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-android-green selection:text-slate-900">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 bg-android-darkGreen/90 backdrop-blur-md border-b border-android-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-android-green to-emerald-400 flex items-center justify-center shadow-lg shadow-android-green/20 text-slate-950 text-xl font-black">
+                    <i class="fa-brands fa-android"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-android-green bg-clip-text text-transparent">Android Event & Intent Studio</h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Event Handling, Activity Transitions, and Intent Data Passing</p>
+                </div>
+            </div>
+
+            <!-- Workspace Mode Badge -->
+            <div class="hidden md:flex items-center gap-2 bg-android-navy px-3 py-1.5 rounded-xl border border-android-border text-xs font-mono">
+                <span class="text-android-green flex items-center gap-1.5 font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-android-green animate-pulse"></span> KOTLIN MOBILE STUDIO
+                </span>
+                <span class="text-slate-600">|</span>
+                <span class="text-slate-400"><i class="fa-solid fa-code-commit text-android-accent mr-1"></i> API 34 (Android 14)</span>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-1 bg-android-navy p-1 rounded-xl border border-android-border">
+                <button onclick="switchTab('eventlab')" id="nav-eventlab" class="nav-btn px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 text-slate-950 bg-android-green shadow">
+                    <i class="fa-solid fa-bolt"></i> <span class="hidden md:inline">Event Handling</span>
+                </button>
+                <button onclick="switchTab('intents')" id="nav-intents" class="nav-btn px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-android-card">
+                    <i class="fa-solid fa-compass"></i> <span class="hidden md:inline">Intent Launcher</span>
+                </button>
+                <button onclick="switchTab('datapassing')" id="nav-datapassing" class="nav-btn px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-android-card">
+                    <i class="fa-solid fa-paper-plane"></i> <span class="hidden md:inline">Data Passing</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="nav-quiz" class="nav-btn px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white hover:bg-android-card">
+                    <i class="fa-solid fa-trophy"></i> <span class="hidden md:inline">Challenge & Quiz</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- System Intent Popup Dialog Simulator (Implicit Intent Preview Overlay) -->
+    <div id="implicit-dialog-overlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-android-card border border-android-border w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-center gap-3 border-b border-android-border pb-3">
+                <div id="implicit-dialog-icon" class="w-10 h-10 rounded-xl bg-android-accent/20 text-android-accent flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div>
+                    <h3 id="implicit-dialog-title" class="font-bold text-white text-sm">System Intent Triggered</h3>
+                    <p id="implicit-dialog-action" class="text-[11px] font-mono text-android-green">android.intent.action.VIEW</p>
+                </div>
+            </div>
+            <div id="implicit-dialog-body" class="text-xs text-slate-300 font-mono bg-android-navy p-3 rounded-xl border border-android-border break-all">
+                https://developer.android.com
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeImplicitDialog()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold">Tutup Dialog</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ================= MODUL 1: EVENT HANDLING & LISTENERS LAB ================= -->
+        <section id="tab-eventlab" class="tab-content space-y-6">
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-android-darkGreen via-android-navy to-android-darkGreen border border-android-border p-6 sm:p-8">
+                <div class="absolute -right-10 -top-10 w-72 h-72 bg-android-green/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-3xl space-y-3">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-android-green/10 text-android-green border border-android-green/20">
+                        <i class="fa-solid fa-bolt"></i> Modul 1: Event Handling & Listeners
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                        Merespon Interaksi Pengguna di Android
+                    </h2>
+                    <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                        Aplikasi Android bersifat **Event-Driven**. Event terjadi saat pengguna menyentuh tombol, mengetik teks, atau menekan lama komponen UI. Pelajari cara memasang listener seperti `setOnClickListener`, `setOnLongClickListener`, `TextWatcher`, dan `setOnFocusChangeListener`.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Event Matrix Playground Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Interactive Screen Canvas (5 cols) -->
+                <div class="lg:col-span-5 bg-android-card border border-android-border rounded-2xl p-6 flex flex-col items-center justify-center min-h-[440px] relative grid-pattern">
+                    
+                    <!-- Smartphone Frame -->
+                    <div class="w-72 h-[420px] bg-slate-900 border-4 border-slate-700 rounded-[32px] p-4 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                        
+                        <!-- Top Bar -->
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 border-b border-slate-800 pb-2 font-mono">
+                            <span>Event Handling Canvas</span>
+                            <span class="text-android-green">MainActivity</span>
+                        </div>
+
+                        <!-- Screen Interactive Inputs -->
+                        <div class="my-auto space-y-4">
+                            <!-- Input 1: EditText with TextWatcher -->
+                            <div>
+                                <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                                    <span>android:id="@+id/etUsername"</span>
+                                    <span id="char-counter" class="font-mono text-android-accent">0/15 karakter</span>
+                                </div>
+                                <input type="text" id="et-event-demo" placeholder="Ketik nama Anda..." oninput="handleTextWatcher(this.value)" onfocus="handleFocusChange(true)" onblur="handleFocusChange(false)" class="w-full bg-slate-950 border border-slate-700 focus:border-android-green rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-all">
+                                <span id="input-validation-msg" class="text-[10px] text-rose-400 mt-1 block hidden"><i class="fa-solid fa-circle-exclamation mr-1"></i>Minimal 3 karakter!</span>
+                            </div>
+
+                            <!-- Input 2: Button with setOnClickListener & OnLongClickListener -->
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1 font-mono">android:id="@+id/btnSubmit"</label>
+                                <button id="btn-event-demo" onclick="handleButtonClick()" oncontextmenu="handleButtonLongClick(event)" disabled class="w-full py-2.5 bg-android-green hover:bg-emerald-400 disabled:opacity-40 disabled:hover:bg-android-green text-slate-950 font-bold rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i> Klik / Tahan Tombol Ini
+                                </button>
+                                <span class="text-[9px] text-slate-500 text-center block mt-1">Gunakan klik kiri (Click) atau klik kanan/tahan (Long Click)</span>
+                            </div>
+                        </div>
+
+                        <div class="w-24 h-1 bg-slate-700 rounded-full mx-auto"></div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Live Event Console & Kotlin Code (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+
+                    <!-- Event Log Console Box -->
+                    <div class="bg-slate-950 border border-android-border rounded-2xl p-4 font-mono text-xs shadow-2xl">
+                        <div class="flex items-center justify-between pb-3 border-b border-android-border text-slate-400">
+                            <span class="flex items-center gap-2 text-android-accent">
+                                <i class="fa-solid fa-terminal"></i> Logcat / Event Logger Console
+                            </span>
+                            <button onclick="clearEventConsole()" class="text-[10px] text-slate-500 hover:text-slate-300">Clear Logs</button>
+                        </div>
+                        <div id="event-console-logs" class="p-2 my-2 h-36 overflow-y-auto custom-scrollbar space-y-1.5 text-slate-300">
+                            <p class="text-slate-600 italic">// Sistem siap. Lakukan interaksi pada ponsel di sebelah kiri...</p>
+                        </div>
+                    </div>
+
+                    <!-- Listener Syntax Breakdown -->
+                    <div class="bg-android-card border border-android-border rounded-2xl p-5 space-y-3">
+                        <h3 class="text-xs font-mono font-bold uppercase text-android-green tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-code"></i> Kode Listener Kotlin Utama
+                        </h3>
+                        <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto custom-scrollbar"><code>// 1. OnClickListener (Klik Tombol)
+binding.btnSubmit.setOnClickListener {
+    Toast.makeText(this, "Tombol Diklik!", Toast.LENGTH_SHORT).show()
+}
+
+// 2. OnLongClickListener (Tekan Lama)
+binding.btnSubmit.setOnLongClickListener {
+    showOptionsDialog()
+    true // return true agar event dikonsumsi
+}
+
+// 3. TextWatcher (Merespon Ketikan Teks Real-Time)
+binding.etUsername.addTextChangedListener(object : TextWatcher {
+    override function onTextChanged(s: CharSequence?, p1: Int, p2: Int, p3: Int) {
+        binding.btnSubmit.isEnabled = (s?.length ?: 0) >= 3
+    }
+})</code></pre>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= MODUL 2: EXPLICIT VS IMPLICIT INTENT SIMULATOR ================= -->
+        <section id="tab-intents" class="tab-content hidden space-y-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-android-accent"></i> Intent Launcher Simulator
+                    </h2>
+                    <p class="text-xs text-slate-400">Pahami perbedaan antara Intent Eksplisit (pindah antar Activity internal) dan Intent Implisit (memanggil aplikasi sistem).</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Card 1: Explicit Intent -->
+                <div class="bg-android-card border border-android-border rounded-2xl p-6 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3 border-b border-android-border pb-3">
+                            <div class="w-10 h-10 rounded-xl bg-android-green/10 text-android-green flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base">1. Explicit Intent</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Target Class Didefinisikan Secara Pasti</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-300 leading-relaxed my-4">
+                            Digunakan untuk berpindah antar halaman/Activity internal di dalam aplikasi Anda sendiri dengan menentukan nama kelas tujuan secara eksplisit.
+                        </p>
+
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-android-green space-y-1">
+                            <div>val intent = Intent(this, DetailActivity::class.java)</div>
+                            <div>startActivity(intent)</div>
+                        </div>
+                    </div>
+
+                    <button onclick="triggerExplicitIntentDemo()" class="w-full py-2.5 bg-android-green hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-android-green/20 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> Jalankan Explicit Intent ke DetailActivity
+                    </button>
+                </div>
+
+                <!-- Card 2: Implicit Intent Launchpad -->
+                <div class="bg-android-card border border-android-border rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center gap-3 border-b border-android-border pb-3">
+                        <div class="w-10 h-10 rounded-xl bg-android-accent/10 text-android-accent flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white text-base">2. Implicit Intent Launchpad</h3>
+                            <p class="text-[11px] text-slate-400 font-mono">Meminta Bantuan Aplikasi Sistem Lain</p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Tidak menentukan nama kelas, melainkan menentukan **Action** (seperti membuka URL, menelpon, atau membuka peta) agar Android memilihkan aplikasi yang sesuai.
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button onclick="triggerImplicitIntent('VIEW', 'https://developer.android.com')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition-all">
+                            <span class="text-android-accent text-xs font-bold block"><i class="fa-solid fa-globe mr-1"></i> ACTION_VIEW</span>
+                            <span class="text-[10px] text-slate-400">Buka Browser Web</span>
+                        </button>
+                        <button onclick="triggerImplicitIntent('DIAL', 'tel:08123456789')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition-all">
+                            <span class="text-android-amber text-xs font-bold block"><i class="fa-solid fa-phone mr-1"></i> ACTION_DIAL</span>
+                            <span class="text-[10px] text-slate-400">Buka Telepon Dialer</span>
+                        </button>
+                        <button onclick="triggerImplicitIntent('SEND', 'Halo, belajar Android sangat seru!')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition-all">
+                            <span class="text-android-purple text-xs font-bold block"><i class="fa-solid fa-share-alt mr-1"></i> ACTION_SEND</span>
+                            <span class="text-[10px] text-slate-400">Bagikan Teks Tautan</span>
+                        </button>
+                        <button onclick="triggerImplicitIntent('MAP', 'geo:-6.1754,106.8272?q=Monas')" class="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl text-left transition-all">
+                            <span class="text-android-rose text-xs font-bold block"><i class="fa-solid fa-map-location-dot mr-1"></i> ACTION_VIEW (Geo)</span>
+                            <span class="text-[10px] text-slate-400">Buka Peta / Maps</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= MODUL 3: DATA PASSING & DUAL-SCREEN WORKSPACE ================= -->
+        <section id="tab-datapassing" class="tab-content hidden space-y-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-android-green"></i> Data Passing (Intent Extras & Activity Result)
+                    </h2>
+                    <p class="text-xs text-slate-400">Isi data di MainActivity (Layar A), kirimkan ke DetailActivity (Layar B), dan lihat balasan hasilnya (*setResult*).</p>
+                </div>
+            </div>
+
+            <!-- Dual Smartphone Workspace + Code Generator Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Interactive Dual Screen Canvas (7 cols) -->
+                <div class="lg:col-span-7 bg-android-card border border-android-border rounded-2xl p-6 flex flex-col items-center justify-center relative grid-pattern min-h-[500px] overflow-hidden">
+                    
+                    <!-- Dynamic Flying Data Packet Element -->
+                    <div id="flying-data-packet" class="absolute z-30 bg-android-green text-slate-950 px-3 py-1.5 rounded-full font-mono text-[10px] font-bold shadow-2xl flex items-center gap-1.5 hidden pointer-events-none">
+                        <i class="fa-solid fa-box-archive"></i> <span id="flying-packet-label">Bundle Extras</span>
+                    </div>
+
+                    <!-- Screens Container -->
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6 w-full">
+                        
+                        <!-- SCREEN A: MainActivity -->
+                        <div class="w-64 h-[440px] bg-slate-900 border-4 border-slate-700 rounded-[30px] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                            <div class="text-[9px] font-mono text-slate-400 flex justify-between border-b border-slate-800 pb-1.5">
+                                <span>MainActivity (Layar A)</span>
+                                <span class="text-android-green">Form Sender</span>
+                            </div>
+
+                            <!-- Screen A Form Content -->
+                            <div class="my-auto space-y-2.5">
+                                <div>
+                                    <label class="text-[9px] text-slate-400 block font-mono">EXTRA_USER_NAME</label>
+                                    <input type="text" id="dp-name-input" value="Budi Santoso" oninput="updateCodeGenerators()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-android-green font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] text-slate-400 block font-mono">EXTRA_USER_ROLE</label>
+                                    <select id="dp-role-input" onchange="updateCodeGenerators()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-android-green font-mono">
+                                        <option value="Android Developer">Android Developer</option>
+                                        <option value="UI/UX Designer">UI/UX Designer</option>
+                                        <option value="System Administrator">System Administrator</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] text-slate-400 block font-mono">Pilih Avatar Profil</label>
+                                    <div class="flex items-center justify-between gap-1">
+                                        <button onclick="selectAvatar('👨‍💻')" class="avatar-btn flex-1 py-1 bg-slate-800 border border-android-green rounded text-sm">👨‍💻</button>
+                                        <button onclick="selectAvatar('👩‍💻')" class="avatar-btn flex-1 py-1 bg-slate-800 border border-slate-700 rounded text-sm">👩‍💻</button>
+                                        <button onclick="selectAvatar('🚀')" class="avatar-btn flex-1 py-1 bg-slate-800 border border-slate-700 rounded text-sm">🚀</button>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button -->
+                                <button onclick="sendDataIntent()" class="w-full py-2 bg-android-green text-slate-950 font-bold rounded-lg text-[11px] shadow transition-all flex items-center justify-center gap-1.5 mt-2">
+                                    <i class="fa-solid fa-paper-plane"></i> Kirim Intent dengan Data
+                                </button>
+                            </div>
+
+                            <!-- Returned Result Box inside Screen A -->
+                            <div id="returned-result-box" class="bg-slate-950 border border-slate-800 p-2 rounded-lg text-[10px] font-mono hidden">
+                                <span class="text-android-amber font-bold block">ActivityResult Callback:</span>
+                                <span id="returned-msg-text" class="text-slate-300">Status: OK</span>
+                            </div>
+
+                            <div class="w-20 h-1 bg-slate-700 rounded-full mx-auto"></div>
+                        </div>
+
+                        <!-- SCREEN B: DetailActivity -->
+                        <div id="screen-b-frame" class="w-64 h-[440px] bg-slate-900 border-4 border-slate-700 rounded-[30px] p-3 flex flex-col justify-between shadow-2xl relative overflow-hidden transition-all duration-300">
+                            <div class="text-[9px] font-mono text-slate-400 flex justify-between border-b border-slate-800 pb-1.5">
+                                <span>DetailActivity (Layar B)</span>
+                                <span class="text-android-accent">Receiver</span>
+                            </div>
+
+                            <!-- Screen B Received Content -->
+                            <div id="screen-b-content" class="my-auto space-y-3 text-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-android-accent flex items-center justify-center text-3xl mx-auto shadow-lg" id="screen-b-avatar">
+                                    👨‍💻
+                                </div>
+
+                                <div>
+                                    <span class="text-[9px] font-mono text-android-accent uppercase tracking-wider block">Intent Extra Received</span>
+                                    <h4 id="screen-b-name" class="font-bold text-sm text-white">Budi Santoso</h4>
+                                    <p id="screen-b-role" class="text-[11px] text-slate-400 font-mono">Android Developer</p>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-800 space-y-1.5">
+                                    <label class="text-[9px] text-slate-400 block font-mono">Kirim Balasan (setResult)</label>
+                                    <button onclick="sendResultBack('Profil Terverifikasi ✅')" class="w-full py-1.5 bg-android-accent hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-[10px] transition-all">
+                                        Kirim "Status OK" Kembali ke Layar A
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="w-20 h-1 bg-slate-700 rounded-full mx-auto"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Real-time Kotlin Code Generator (5 cols) -->
+                <div class="lg:col-span-5 bg-slate-950 border border-android-border rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                    <div class="bg-android-card px-4 py-3 border-b border-android-border flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <button onclick="switchCodeTab('main')" id="codetab-main" class="text-xs font-mono font-bold px-2.5 py-1 rounded-md text-white bg-android-green/20 border border-android-green/40">MainActivity.kt</button>
+                            <button onclick="switchCodeTab('detail')" id="codetab-detail" class="text-xs font-mono font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-white">DetailActivity.kt</button>
+                        </div>
+                        <button onclick="copyGeneratedCode()" class="text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700 transition-all">
+                            <i class="fa-regular fa-copy"></i> Salin
+                        </button>
+                    </div>
+
+                    <pre class="p-4 text-[11px] font-mono text-slate-300 leading-relaxed overflow-x-auto custom-scrollbar flex-grow"><code id="kotlin-code-display">
+// Loading Kotlin Code...
+                    </code></pre>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= MODUL 4: GAMIFIED CHALLENGE & QUIZ ================= -->
+        <section id="tab-quiz" class="tab-content hidden space-y-6">
+            
+            <!-- Sub Navigation (Fix Bug Challenge vs Quiz Questions) -->
+            <div class="flex justify-center border-b border-android-border pb-4">
+                <div class="inline-flex bg-android-card p-1 rounded-xl border border-android-border">
+                    <button onclick="switchQuizSubTab('bug')" id="subtab-bug" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-950 bg-android-green transition-all">
+                        <i class="fa-solid fa-bug mr-1.5"></i> Challenge: Perbaiki Intent Bug
+                    </button>
+                    <button onclick="switchQuizSubTab('questions')" id="subtab-questions" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">
+                        <i class="fa-solid fa-graduation-cap mr-1.5"></i> Evaluasi Quiz & Badge
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 1: FIX INTENT BUG CHALLENGE -->
+            <div id="quiz-bug-view" class="max-w-4xl mx-auto space-y-6">
+                <div class="bg-android-card border border-android-border rounded-2xl p-6 space-y-6">
+                    <div class="border-b border-android-border pb-4">
+                        <span class="text-xs font-mono font-bold text-android-amber uppercase tracking-wider">Misi Perbaikan Kode Android</span>
+                        <h3 class="text-lg font-bold text-white mt-1">Temukan Bug pada Intent Data Passing!</h3>
+                        <p class="text-xs text-slate-400">Pengembang lupa menambahkan data ekstra atau salah mencocokkan kunci Key Intent. Pilih potongan kode yang **paling benar dan tanpa bug** di bawah ini.</p>
+                    </div>
+
+                    <!-- Bug Puzzle Snippets -->
+                    <div class="space-y-4">
+                        <!-- Option A (Bug Intent Key) -->
+                        <div onclick="checkBugSolution(0)" class="bug-option-card border border-slate-800 hover:border-android-rose bg-slate-950 p-4 rounded-xl cursor-pointer transition-all">
+                            <span class="text-xs text-slate-500 font-semibold mb-2 block font-mono">Pilihan A (Bug Intent Key Mismatch):</span>
+                            <pre class="text-xs font-mono text-slate-300">
+// MainActivity.kt:
+intent.putExtra("USER_KEY", "Budi")
+
+// DetailActivity.kt:
+val name = intent.getStringExtra("NAME_KEY") // ❌ Key tidak cocok!</pre>
+                        </div>
+
+                        <!-- Option B (Correct) -->
+                        <div onclick="checkBugSolution(1)" class="bug-option-card border border-slate-800 hover:border-android-green bg-slate-950 p-4 rounded-xl cursor-pointer transition-all">
+                            <span class="text-xs text-slate-500 font-semibold mb-2 block font-mono">Pilihan B (Sintaks Tepat & Presisi):</span>
+                            <pre class="text-xs font-mono text-slate-300">
+// MainActivity.kt:
+val intent = Intent(this, DetailActivity::class.java).apply {
+    putExtra("USER_KEY", "Budi")
+}
+startActivity(intent)
+
+// DetailActivity.kt:
+val name = intent.getStringExtra("USER_KEY") // ✅ Key cocok!</pre>
+                        </div>
+
+                        <!-- Option C (Missing startActivity) -->
+                        <div onclick="checkBugSolution(2)" class="bug-option-card border border-slate-800 hover:border-android-rose bg-slate-950 p-4 rounded-xl cursor-pointer transition-all">
+                            <span class="text-xs text-slate-500 font-semibold mb-2 block font-mono">Pilihan C (Missing startActivity):</span>
+                            <pre class="text-xs font-mono text-slate-300">
+// MainActivity.kt:
+val intent = Intent(this, DetailActivity::class.java)
+intent.putExtra("USER_KEY", "Budi")
+// ❌ Lupa memanggil startActivity(intent)!</pre>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Box -->
+                    <div id="bug-feedback" class="hidden p-4 rounded-xl border text-xs sm:text-sm"></div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 2: QUIZ & BADGE CERTIFICATE -->
+            <div id="quiz-questions-view" class="hidden max-w-3xl mx-auto space-y-6">
+                <!-- Quiz Container -->
+                <div id="quiz-card-container" class="bg-android-card border border-android-border rounded-2xl p-6 sm:p-8 space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs text-slate-400 font-mono">
+                            <span id="quiz-progress-text">Soal 1 dari 5</span>
+                            <span id="quiz-score-live" class="text-android-green font-bold">Skor: 0</span>
+                        </div>
+                        <div class="w-full h-2 bg-android-navy rounded-full overflow-hidden">
+                            <div id="quiz-progress-bar" class="h-full bg-android-green transition-all duration-300" style="width: 20%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 id="quiz-question" class="text-base sm:text-lg font-bold text-white leading-snug">
+                            Loading pertanyaan...
+                        </h3>
+                    </div>
+
+                    <div id="quiz-options" class="space-y-3">
+                        <!-- Options injected dynamically -->
+                    </div>
+
+                    <div id="quiz-feedback" class="hidden p-4 rounded-xl border text-xs sm:text-sm leading-relaxed">
+                        <!-- Feedback -->
+                    </div>
+
+                    <div class="flex justify-end border-t border-android-border pt-4">
+                        <button id="next-btn" onclick="nextQuestion()" disabled class="bg-android-green hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition-all text-xs flex items-center gap-2">
+                            Soal Berikutnya <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result Badge Certificate View -->
+                <div id="quiz-result" class="hidden bg-android-card border border-android-border rounded-2xl p-8 text-center space-y-6">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-android-green to-emerald-400 flex items-center justify-center text-4xl text-slate-950 shadow-xl shadow-android-green/20">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-extrabold text-white">Sertifikat Intent & Event Handling Specialist</h3>
+                        <p class="text-slate-300 text-xs">Evaluasi Pemrograman Mobile Android (Kotlin)</p>
+                    </div>
+
+                    <div class="bg-android-navy p-6 rounded-2xl border border-android-border max-w-sm mx-auto space-y-3 font-mono">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Skor Akhir Evaluasi</div>
+                        <div id="final-score" class="text-4xl font-extrabold text-android-green">100 / 100</div>
+                        <div id="badge-title" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-android-green/20 text-android-green border border-android-green/30">
+                            Android Intent Master 🚀
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-center gap-4">
+                        <button onclick="restartQuiz()" class="bg-android-navy hover:bg-slate-800 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-xs flex items-center gap-1.5 border border-android-border">
+                            <i class="fa-solid fa-rotate-right"></i> Ulangi Kuis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-android-border bg-android-darkGreen py-6 text-center text-xs text-slate-500">
+        <p>Studio Pembelajaran Android Event Handling & Intent Navigation &bull; Modul Interaktif Mobile App Developer</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // ================= TAB NAVIGATION =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-slate-950', 'bg-android-green', 'shadow');
+                btn.classList.add('text-slate-400', 'hover:text-white');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('text-slate-950', 'bg-android-green', 'shadow');
+            activeBtn.classList.remove('text-slate-400', 'hover:text-white');
+        }
+
+        // ================= MODUL 1: EVENT HANDLING LOGIC =================
+        function handleTextWatcher(val) {
+            const counter = document.getElementById('char-counter');
+            const btn = document.getElementById('btn-event-demo');
+            const valMsg = document.getElementById('input-validation-msg');
+
+            const len = val.length;
+            counter.innerText = `${len}/15 karakter`;
+
+            if (len > 0 && len < 3) {
+                valMsg.classList.remove('hidden');
+                btn.disabled = true;
+            } else {
+                valMsg.classList.add('hidden');
+                btn.disabled = (len === 0);
+            }
+
+            logEvent(`TextWatcher.onTextChanged -> "${val}" (${len} chars)`);
+        }
+
+        function handleFocusChange(isFocused) {
+            if (isFocused) {
+                logEvent(`OnFocusChangeListener -> EditText Gained Focus`);
+            } else {
+                logEvent(`OnFocusChangeListener -> EditText Lost Focus`);
+            }
+        }
+
+        function handleButtonClick() {
+            logEvent(`setOnClickListener -> Button Clicked!`);
+            showToast('Button OnClickListener Triggered!');
+        }
+
+        function handleButtonLongClick(e) {
+            e.preventDefault();
+            logEvent(`setOnLongClickListener -> Button Pressed & Held!`);
+            showToast('Button OnLongClickListener Triggered!');
+        }
+
+        function logEvent(msg) {
+            const consoleLogs = document.getElementById('event-console-logs');
+            const p = document.createElement('p');
+            const now = new Date().toLocaleTimeString();
+            p.innerHTML = `<span class="text-slate-500">[${now}]</span> <span class="text-android-green">${escapeHtml(msg)}</span>`;
+            consoleLogs.appendChild(p);
+            consoleLogs.scrollTop = consoleLogs.scrollHeight;
+        }
+
+        function clearEventConsole() {
+            document.getElementById('event-console-logs').innerHTML = `<p class="text-slate-600 italic">// Console cleared...</p>`;
+        }
+
+        // ================= MODUL 2: INTENT LAUNCHERS =================
+        function triggerExplicitIntentDemo() {
+            switchTab('datapassing');
+            showToast('Explicit Intent: Navigating to Data Passing Workspace');
+        }
+
+        function triggerImplicitIntent(action, data) {
+            const dialog = document.getElementById('implicit-dialog-overlay');
+            const title = document.getElementById('implicit-dialog-title');
+            const actionText = document.getElementById('implicit-dialog-action');
+            const body = document.getElementById('implicit-dialog-body');
+            const icon = document.getElementById('implicit-dialog-icon');
+
+            if (action === 'VIEW') {
+                title.innerText = "System Web Browser Launch";
+                actionText.innerText = "Intent(Intent.ACTION_VIEW, Uri.parse(...))";
+                body.innerText = `Target URL: ${data}`;
+                icon.innerHTML = `<i class="fa-solid fa-globe text-android-accent"></i>`;
+            } else if (action === 'DIAL') {
+                title.innerText = "Phone Dialer App Launch";
+                actionText.innerText = "Intent(Intent.ACTION_DIAL, Uri.parse(...))";
+                body.innerText = `Pre-filled Number: ${data}`;
+                icon.innerHTML = `<i class="fa-solid fa-phone text-android-amber"></i>`;
+            } else if (action === 'SEND') {
+                title.innerText = "Share Sheet Dialog Launch";
+                actionText.innerText = "Intent(Intent.ACTION_SEND).putExtra(...)";
+                body.innerText = `Shared Content: "${data}"`;
+                icon.innerHTML = `<i class="fa-solid fa-share-alt text-android-purple"></i>`;
+            } else if (action === 'MAP') {
+                title.innerText = "Google Maps Location Launch";
+                actionText.innerText = "Intent(Intent.ACTION_VIEW, Uri.parse(...))";
+                body.innerText = `Geo Coordinates: ${data}`;
+                icon.innerHTML = `<i class="fa-solid fa-map-location-dot text-android-rose"></i>`;
+            }
+
+            dialog.classList.remove('hidden');
+        }
+
+        function closeImplicitDialog() {
+            document.getElementById('implicit-dialog-overlay').classList.add('hidden');
+        }
+
+        // ================= MODUL 3: DATA PASSING & DUAL SCREEN =================
+        let selectedAvatarEmoji = '👨‍💻';
+        let activeCodeTab = 'main';
+
+        function selectAvatar(emoji) {
+            selectedAvatarEmoji = emoji;
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('border-android-green');
+                btn.classList.add('border-slate-700');
+            });
+            event.target.classList.add('border-android-green');
+            event.target.classList.remove('border-slate-700');
+            updateCodeGenerators();
+        }
+
+        function sendDataIntent() {
+            const name = document.getElementById('dp-name-input').value || 'Nama User';
+            const role = document.getElementById('dp-role-input').value;
+
+            // Trigger Flying Data Packet Animation
+            const packet = document.getElementById('flying-data-packet');
+            document.getElementById('flying-packet-label').innerText = `Extra: ${name}`;
+            packet.classList.remove('hidden', 'animate-data-fly');
+            void packet.offsetWidth; // trigger reflow
+            packet.classList.add('animate-data-fly');
+
+            setTimeout(() => {
+                // Update Screen B Received Data
+                document.getElementById('screen-b-avatar').innerText = selectedAvatarEmoji;
+                document.getElementById('screen-b-name').innerText = name;
+                document.getElementById('screen-b-role').innerText = role;
+
+                const screenB = document.getElementById('screen-b-frame');
+                screenB.classList.add('slide-left-enter');
+                setTimeout(() => screenB.classList.remove('slide-left-enter'), 400);
+
+                showToast(`Intent Extras Sent: ${name}`);
+            }, 600);
+        }
+
+        function sendResultBack(msg) {
+            const resultBox = document.getElementById('returned-result-box');
+            document.getElementById('returned-msg-text').innerText = `Returned: ${msg}`;
+            resultBox.classList.remove('hidden');
+
+            showToast('ActivityResult Callback Received in MainActivity!');
+        }
+
+        function switchCodeTab(tab) {
+            activeCodeTab = tab;
+            document.getElementById('codetab-main').className = tab === 'main' ? "text-xs font-mono font-bold px-2.5 py-1 rounded-md text-white bg-android-green/20 border border-android-green/40" : "text-xs font-mono font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-white";
+            document.getElementById('codetab-detail').className = tab === 'detail' ? "text-xs font-mono font-bold px-2.5 py-1 rounded-md text-white bg-android-green/20 border border-android-green/40" : "text-xs font-mono font-bold px-2.5 py-1 rounded-md text-slate-400 hover:text-white";
+            updateCodeGenerators();
+        }
+
+        function updateCodeGenerators() {
+            const name = document.getElementById('dp-name-input').value || 'User';
+            const role = document.getElementById('dp-role-input').value;
+            const codeDisplay = document.getElementById('kotlin-code-display');
+
+            if (activeCodeTab === 'main') {
+                codeDisplay.innerText = `// MainActivity.kt (Sender)
+package com.example.app
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.example.app.databinding.ActivityMainBinding
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.btnSend.setOnClickListener {
+            val intent = Intent(this, DetailActivity::class.java).apply {
+                putExtra("EXTRA_USER_NAME", "${name}")
+                putExtra("EXTRA_USER_ROLE", "${role}")
+                putExtra("EXTRA_AVATAR", "${selectedAvatarEmoji}")
+            }
+            startActivity(intent)
+        }
+    }
+}`;
+            } else {
+                codeDisplay.innerText = `// DetailActivity.kt (Receiver)
+package com.example.app
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.example.app.databinding.ActivityDetailBinding
+
+class DetailActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityDetailBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Unpack Intent Extras
+        val userName = intent.getStringExtra("EXTRA_USER_NAME")
+        val userRole = intent.getStringExtra("EXTRA_USER_ROLE")
+        val avatar = intent.getStringExtra("EXTRA_AVATAR")
+
+        binding.tvName.text = userName
+        binding.tvRole.text = userRole
+
+        // Send Result Back to MainActivity
+        binding.btnReturn.setOnClickListener {
+            val resultIntent = Intent().apply {
+                putExtra("EXTRA_RESULT", "Profil Terverifikasi ✅")
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish() // Close DetailActivity
+        }
+    }
+}`;
+            }
+        }
+
+        function copyGeneratedCode() {
+            const code = document.getElementById('kotlin-code-display').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('Kode Kotlin berhasil disalin!');
+        }
+
+        // ================= MODUL 4: GAMIFIED CHALLENGE & QUIZ =================
+        function switchQuizSubTab(key) {
+            if (key === 'bug') {
+                document.getElementById('quiz-bug-view').classList.remove('hidden');
+                document.getElementById('quiz-questions-view').classList.add('hidden');
+                document.getElementById('subtab-bug').className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-950 bg-android-green transition-all";
+                document.getElementById('subtab-questions').className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+            } else {
+                document.getElementById('quiz-bug-view').classList.add('hidden');
+                document.getElementById('quiz-questions-view').classList.remove('hidden');
+                document.getElementById('subtab-bug').className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+                document.getElementById('subtab-questions').className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-950 bg-android-green transition-all";
+            }
+        }
+
+        function checkBugSolution(choice) {
+            const feedback = document.getElementById('bug-feedback');
+            feedback.classList.remove('hidden');
+
+            if (choice === 1) {
+                feedback.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 text-xs sm:text-sm";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check text-android-green mr-2"></i><strong>Tepat Sekali!</strong> Pilihan B mendefinisikan Key "USER_KEY" secara konsisten pada putExtra() dan getStringExtra() serta memanggil startActivity(intent).`;
+            } else if (choice === 0) {
+                feedback.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 text-xs sm:text-sm";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400 mr-2"></i><strong>Bug Ketemu!</strong> Pilihan A menggunakan "USER_KEY" saat mengirim, namun mencari "NAME_KEY" saat menerima, sehingga nilainya akan 'null'.`;
+            } else {
+                feedback.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 text-xs sm:text-sm";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400 mr-2"></i><strong>Bug Ketemu!</strong> Pilihan C lupa memanggil fungsi <code>startActivity(intent)</code>, sehingga halaman tidak akan berpindah.`;
+            }
+        }
+
+        // Quiz Questions Data
+        const quizData = [
+            {
+                question: "1. Manakah listener yang paling tepat digunakan untuk merespon perubahan ketikan teks pengguna secara real-time pada EditText?",
+                options: ["setOnClickListener", "addTextChangedListener (TextWatcher)", "setOnLongClickListener", "setOnTouchListener"],
+                answer: 1,
+                explanation: "Benar! TextWatcher (onTextChanged) memantau setiap karakter yang diketik atau dihapus oleh pengguna."
+            },
+            {
+                question: "2. Jenis Intent apa yang digunakan untuk berpindah dari MainActivity ke DetailActivity di dalam aplikasi yang sama?",
+                options: ["Implicit Intent", "Explicit Intent", "Broadcast Intent", "System Intent"],
+                answer: 1,
+                explanation: "Benar! Explicit Intent menentukan kelas target secara jelas seperti Intent(this, DetailActivity::class.java)."
+            },
+            {
+                question: "3. Metode yang digunakan untuk menyisipkan data tambahan (seperti Nama atau ID) ke dalam objek Intent sebelum dikirim adalah...",
+                options: ["intent.appendData()", "intent.putExtra(key, value)", "intent.attachData()", "intent.setResult()"],
+                answer: 1,
+                explanation: "Benar! putExtra(key, value) menyimpan data berbentuk pasangan Key-Value ke dalam Intent Extra."
+            },
+            {
+                question: "4. Fungsi apa yang harus dipanggil di Activity tujuan jika ingin mengirimkan balasan data kembali ke Activity asal?",
+                options: ["setResult(Activity.RESULT_OK, intent)", "finishAndRestart()", "startActivity()", "sendBroadcast()"],
+                answer: 0,
+                explanation: "Benar! setResult() menetapkan status hasil dan Intent balasan sebelum dipanggil finish()."
+            },
+            {
+                question: "5. Kode Intent berikut: Intent(Intent.ACTION_VIEW, Uri.parse('https://google.com')) termasuk kategori...",
+                options: ["Explicit Intent", "Implicit Intent", "Static Intent", "Service Intent"],
+                answer: 1,
+                explanation: "Benar! Intent ini meminta sistem memilihkan aplikasi web browser tanpa menyebutkan kelas targetnya secara khusus."
+            }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function loadQuestion() {
+            const q = quizData[currentQIndex];
+            document.getElementById('quiz-question').innerText = q.question;
+            document.getElementById('quiz-progress-text').innerText = `Soal ${currentQIndex + 1} dari ${quizData.length}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((currentQIndex + 1) / quizData.length) * 100}%`;
+            document.getElementById('quiz-score-live').innerText = `Skor: ${score}`;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3.5 rounded-xl bg-android-navy border border-android-border hover:border-android-green text-xs sm:text-sm text-slate-200 transition-all flex items-center justify-between font-medium";
+                btn.innerHTML = `<span>${opt}</span> <i class="fa-regular fa-circle text-slate-600"></i>`;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('next-btn').disabled = true;
+            selectedOption = null;
+        }
+
+        function selectOption(index, element) {
+            if (selectedOption !== null) return;
+            selectedOption = index;
+
+            const q = quizData[currentQIndex];
+            const isCorrect = (index === q.answer);
+
+            const allBtns = document.getElementById('quiz-options').children;
+            if (isCorrect) {
+                element.className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-xs sm:text-sm text-emerald-300 font-medium flex items-center justify-between";
+                element.innerHTML = `<span>${q.options[index]}</span> <i class="fa-solid fa-circle-check text-android-green"></i>`;
+                score += 20;
+            } else {
+                element.className = "w-full text-left p-3.5 rounded-xl bg-rose-500/10 border-2 border-rose-500 text-xs sm:text-sm text-rose-300 font-medium flex items-center justify-between";
+                element.innerHTML = `<span>${q.options[index]}</span> <i class="fa-solid fa-circle-xmark text-rose-400"></i>`;
+                allBtns[q.answer].className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/50 text-xs sm:text-sm text-emerald-300 flex items-center justify-between";
+            }
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            feedbackBox.classList.remove('hidden');
+            feedbackBox.className = isCorrect 
+                ? "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 text-xs sm:text-sm"
+                : "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 text-xs sm:text-sm";
+            feedbackBox.innerText = q.explanation;
+
+            document.getElementById('next-btn').disabled = false;
+            document.getElementById('quiz-score-live').innerText = `Skor: ${score}`;
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            document.getElementById('quiz-card-container').classList.add('hidden');
+            const resultBox = document.getElementById('quiz-result');
+            resultBox.classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = `${score} / 100`;
+
+            const badgeTitle = document.getElementById('badge-title');
+            if (score === 100) badgeTitle.innerText = "🚀 Android Intent & Event Master";
+            else if (score >= 60) badgeTitle.innerText = "📱 Android Developer Practitioner";
+            else badgeTitle.innerText = "🌱 Android Junior Learner";
+        }
+
+        function restartQuiz() {
+            currentQIndex = 0;
+            score = 0;
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-card-container').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // ================= UTILITIES =================
+        function showToast(msg) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "bg-android-card border border-android-green text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0 font-mono";
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-android-green"></i> ${msg}`;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        window.onload = function() {
+            updateCodeGenerators();
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
